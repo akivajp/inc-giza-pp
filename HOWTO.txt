@@ -1,2 +1,0 @@
-STEP 1: Run GIZA++/plain2snt.out to generate vocab files etc
-STEP 2: Run GIZA++/snt2cooc.out to generate coocurance counts
