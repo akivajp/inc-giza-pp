@@ -4,9 +4,9 @@ C: toy/step2.src_step2.trg.snt
 O: toy/output/step2
 coocurrencefile: toy/cooc.file
 model1iterations: 5
-model1dumpfrequency: 1
+model1dumpfrequency: 5
 hmmiterations: 5
-hmmdumpfrequency: 1
+hmmdumpfrequency: 5
 emAlignmentDependencies: 1
 oldTrPrbs: toy/output/step1.thmm.5 
 oldAlPrbs: toy/output/step1.hhmm.5
