@@ -94,6 +94,12 @@ inline ostream&operator<<(ostream&of,const sentPair&s)
 
 class sentenceHandler{
 public:
+  ~sentenceHandler() {
+    if(inputFile) { 
+      inputFile->close();
+      delete inputFile;
+    }
+  }
   const char * inputFilename;   // parallel corpus file name, similar for all 
                             // sentence pair objects
   ifstream *inputFile;     // parallel corpus file handler
