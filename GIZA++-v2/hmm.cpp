@@ -99,7 +99,7 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
       number.insert((size_t)0, 1, (char)(n % 10 + '0'));
     } while((n /= 10) > 0);
     tfile = Prefix + ".t" + shortModelName + "." + number ;
-    afile = Prefix + ".a" + shortModelName + "." + number ;
+    afile = Prefix + ".aa" + shortModelName + "." + number ;
     afileh = Prefix + ".h" + shortModelName + "." + number ;
     alignfile = Prefix + ".A" + shortModelName + "." + number ;
     test_alignfile = Prefix + ".tst.A" + shortModelName + "." + number ;

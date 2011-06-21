@@ -20,7 +20,11 @@ USA.
 
 */
 
-#include <strstream>
+#include <xmlrpc-c/base.hpp>
+#include <xmlrpc-c/registry.hpp>
+#include <xmlrpc-c/server_abyss.hpp>
+
+#include <sstream>
 #include "getSentence.h"
 #include "TTables.h"
 #include "model1.h"
@@ -54,6 +58,8 @@ GLOBAL_PARAMETER3(int,Model6_Iterations,"Model6_Iterations","NO. ITERATIONS MODE
 /****************/
 GLOBAL_PARAMETER(float, step_k, "step_k","Number of ONLINE UPDATES made so far",PARLEV_OPTHEUR,0);
 GLOBAL_PARAMETER(float, step_alpha, "step_alpha","stepsize",PARLEV_OPTHEUR,.9);
+GLOBAL_PARAMETER(short,rpc_port, "rpc_port", "port to run the XMLRPC server on", PARLEV_OPTHEUR,8090);
+GLOBAL_PARAMETER(bool,run_giza_server,"run_giza_server","1: run GIZA as XMLRPC server",PARLEV_OUTPUT,0);
 /****************/
 GLOBAL_PARAMETER(float, PROB_SMOOTH,"probSmooth","probability smoothing (floor) value ",PARLEV_OPTHEUR,1e-7);
 GLOBAL_PARAMETER(float, MINCOUNTINCREASE,"minCountIncrease","minimal count increase",PARLEV_OPTHEUR,1e-7);
@@ -84,16 +90,132 @@ GLOBAL_PARAMETER2(bool,NODUMPS,"NODUMPS","NO FILE DUMPS? (Y/N)","1: do not write
 GLOBAL_PARAMETER(WordIndex,MAX_FERTILITY,"MAX_FERTILITY","maximal fertility for fertility models",PARLEV_EM,10);
 
 Vector<map< pair<int,int>,char > > ReferenceAlignment;
-
-
 bool useDict = false  ;
 string CoocurrenceFile;
 string Prefix, LogFilename, OPath, Usage, 
   SourceVocabFilename, TargetVocabFilename, CorpusFilename, 
   TestCorpusFilename, t_Filename, a_Filename, p0_Filename, d_Filename, 
-  n_Filename, dictionary_Filename;
+  n_Filename, dictionary_Filename, server_log = "./rpc.log";
 
 ofstream logmsg ;
+
+// globals needed for xmlrpc server
+tmodel<COUNT, PROB>* tTable_;
+model1* model1_;
+hmm* HMM_;
+
+vcbList *globeTrainVcbList,*globfTrainVcbList;
+
+class remoteSentenceAlign: public xmlrpc_c::method {
+public:
+  remoteSentenceAlign() {
+    // signature and help strings are documentation -- the client
+    // can query this information with a system.methodSignature and
+    // system.methodHelp RPC.
+    this->_signature = "i:ii";
+    // method's result and two arguments are integers
+    this->_help = "This method aligns a sentence pair";
+  }
+  typedef std::map<std::string, xmlrpc_c::value> params_t;
+  void execute(xmlrpc_c::paramList const& paramList,
+    xmlrpc_c::value *   const  retvalP) {
+    string source, target, oldTrans(""), word;
+    vector<WordIndex> v_src, v_newTrg, v_oldTrg;
+    // break out sentences from paramList and add to vocab
+    const params_t params = paramList.getStruct(0);
+    // source
+    params_t::const_iterator pItr = params.find("source");
+    if(pItr == params.end()) throw xmlrpc_c::fault("Missing source text", xmlrpc_c::fault::CODE_PARSE);
+    source = xmlrpc_c::value_string(pItr->second);
+    stringstream ss(source);
+    cerr << "Source sentence is \"" << ss.str() << "\"" << endl;
+    while(ss >> word) { 
+      cerr << word << " = ";
+      v_src.push_back(globeTrainVcbList->addIfNew(word));
+      cerr << v_src[v_src.size() -1] << endl;
+    }
+    // target
+    pItr = params.find("target");
+    if(pItr == params.end()) throw xmlrpc_c::fault("Missing target text", xmlrpc_c::fault::CODE_PARSE);
+    target = xmlrpc_c::value_string(pItr->second);
+    stringstream st(target);
+    cerr << "Target sentence is \"" << st.str() << "\"" << endl;
+    while(st >> word) { 
+      cerr << word << " = ";
+      v_newTrg.push_back(globfTrainVcbList->addIfNew(word));
+      cerr << v_newTrg[v_newTrg.size() -1] << endl;
+    }
+    // old target if needed
+    pItr = params.find("oldTranslation");
+    if(pItr != params.end()) oldTrans = xmlrpc_c::value_string(pItr->second); 
+    
+    // add all possible cooccurrences to ttable
+    vector<WordIndex> v_targetSorted(v_newTrg);  // make copy
+    std::sort(v_targetSorted.begin(), v_targetSorted.end());
+    tTable_->checkAndAdd(0, v_targetSorted, false); 
+    for(int i=0; i < v_src.size(); ++i) {
+      tTable_->checkAndAdd(v_src[i], v_targetSorted, false); 
+    }
+    // create a new sentence class.  HACK - just print sentence to disk
+    stringstream sf(Get_File_Spec()); 
+    string tmpFileName = Prefix + "." + sf.str();
+    cerr << "tmpFileName = " << tmpFileName << endl;
+    ofstream tmpFile(tmpFileName.c_str());
+    tmpFile << "1" << endl; 
+    for(int i=0; i < v_src.size(); ++i) 
+      tmpFile << v_src[i] << " ";
+    tmpFile << endl;
+    for(int i=0; i < v_newTrg.size(); ++i)
+      tmpFile << v_newTrg[i] << " ";
+    tmpFile << endl;
+    tmpFile.close();
+    sentenceHandler* sentence = new sentenceHandler(tmpFileName.c_str(), globeTrainVcbList, globfTrainVcbList);
+    system(("rm -fr " + tmpFileName).c_str()); //remove tmp file
+    
+    // run iterations
+    model1_->updateSentenceHandler(*sentence);
+    Dictionary* dictionary = new Dictionary("");
+    model1_->em_with_tricks(Model1_Iterations, true, *dictionary, false);
+    delete dictionary; 
+    string alignFileName;
+    HMM_->em_with_tricks(HMM_Iterations, alignFileName);
+    cerr << "alignment output to file " << alignFileName << endl;
+    // return sentence alignment
+    stringstream ssret; 
+    string line;
+    ifstream fin(alignFileName.c_str());
+    while(getline(fin, line)) ssret << line << endl;
+    fin.close();
+    delete sentence;
+    cerr << "Alignment returned is " << ssret.str() << endl;
+    //system("rm -fr " + alignFileName);
+   
+    map<string, xmlrpc_c::value> retData;
+    pair<string, xmlrpc_c::value> 
+        text("alignment", xmlrpc_c::value_string(ssret.str()));
+    retData.insert(text);
+    *retvalP = xmlrpc_c::value_struct(retData);
+  }
+};
+int startXMLRPCServer() {
+  cerr << "Starting XMLRPC server...\n";
+  int port = rpc_port; 
+  //FEWDUMPS=1;
+  xmlrpc_c::registry myRegistry;
+  xmlrpc_c::methodPtr const remoteMethodP(new remoteSentenceAlign);
+  myRegistry.addMethod("remoteAlign", remoteMethodP);
+  xmlrpc_c::serverAbyss myAbyssServer(
+      myRegistry,
+      port,              // TCP port on which to listen
+      server_log  // Log file
+      );
+  cerr << "Listening on port " << port << endl;
+  myAbyssServer.run();
+  // xmlrpc_c::serverAbyss.run() never returns
+  assert(false);
+  return 0;
+}
+
 const string str2Num(int n){
   string number = "";
   do{
@@ -108,7 +230,6 @@ sentenceHandler *testCorpus=0,*corpus=0;
 Perplexity trainPerp, testPerp, trainViterbiPerp, testViterbiPerp ;
 
 string ReadTablePrefix;
-
 
 void printGIZAPars(ostream&out)
 {
@@ -469,8 +590,6 @@ double ErrorsInAlignment(const map< pair<int,int>,char >&reference,const Vector<
 }
 
 
-vcbList *globeTrainVcbList,*globfTrainVcbList;
-
 double StartTraining(int&result)
 { 
   double errors=0.0;
@@ -533,6 +652,7 @@ double StartTraining(int&result)
       abort();
     }
   //ifstream coocs(CoocurrenceFile.c_str());
+  cerr << "Loading coocurrence file...\n";
   tmodel<COUNT, PROB> tTable(CoocurrenceFile);
 #else
   tmodel<COUNT, PROB> tTable;
@@ -544,10 +664,10 @@ double StartTraining(int&result)
    amodel<PROB>  aTable(false);
    amodel<COUNT> aCountTable(false);
    model2 m2(m1,aTable,aCountTable);
-   hmm HMM_(m2);
+   hmm HMM(m2);
    model3 m3(m2);
    if(ReadTablePrefix.length() )  // is false
-     {
+     {/*
        string number = "final";
        string tfile,afilennfile,dfile,d4file,p0file,afile,nfile; //d5file
        tfile = ReadTablePrefix + ".t3." + number ;
@@ -602,41 +722,50 @@ double StartTraining(int&result)
        else
 	 {
 	   cout << "No corpus exists.\n";
-	 }
+	 }*/
     }
    else 
      {
        // initialize model1
        bool seedModel1 = false ;
-       if(Model1_Iterations > 0){
-	 if (t_Filename != "NONE" && t_Filename != ""){
-	   seedModel1 = true ;
-	   m1.load_table(t_Filename.c_str());
-	 }
-         //m1.initialize_table_uniformly(*corpus);
-	 minIter=m1.em_with_tricks(Model1_Iterations,seedModel1,*dictionary, useDict);
-	 errors=m1.errorsAL();
-       }
+    if(Model1_Iterations > 0) {
+     if (t_Filename != "NONE" && t_Filename != ""){
+       seedModel1 = true ;
+       m1.load_table(t_Filename.c_str());
+     }
+     //m1.initialize_table_uniformly(*corpus);
+     if(!run_giza_server) {
+     minIter=m1.em_with_tricks(Model1_Iterations,seedModel1,*dictionary, useDict);
+     errors=m1.errorsAL();
+     }
+   }
 	 {
-	   if(Model2_Iterations > 0){
-	     m2.initialize_table_uniformly(*corpus);
-	     minIter=m2.em_with_tricks(Model2_Iterations);
-	     errors=m2.errorsAL();
-	   }
+	   //if(Model2_Iterations > 0){
+	   //  m2.initialize_table_uniformly(*corpus);
+	   //  minIter=m2.em_with_tricks(Model2_Iterations);
+	   //  errors=m2.errorsAL();
+	   //}
 	   if(HMM_Iterations > 0){
-	     cout << "NOTE: I am doing iterations with the HMM model!\n";
-	     //HMM_.makeWordClasses(m1.Elist,m1.Flist,SourceVocabFilename+".classes",TargetVocabFilename+".classes");
-	     //HMM_.initialize_table_uniformly(*corpus);
+	     //HMM.makeWordClasses(m1.Elist,m1.Flist,SourceVocabFilename+".classes",TargetVocabFilename+".classes");
+	     //HMM.initialize_table_uniformly(*corpus);
              if (a_Filename != "NONE" && a_Filename != ""){
-               HMM_.load_table(a_Filename.c_str());
+               HMM.load_table(a_Filename.c_str());
              }
-       string dummy="";
-	     minIter=HMM_.em_with_tricks(HMM_Iterations, dummy);
-	     errors=HMM_.errorsAL();
+             string dummy;
+       if(!run_giza_server) {
+         cout << "NOTE: I am doing iterations with the HMM model!\n";
+         minIter=HMM.em_with_tricks(HMM_Iterations, dummy);
+         errors=HMM.errorsAL();
+       }
 	   }
-      cerr << "Abby exiting\n";
-      exit(1); 
-	   
+      
+      tTable_ = &tTable; // setup global tTable
+      model1_ = &m1; // global model1
+      HMM_ = &HMM; // global hmm
+      if(run_giza_server) {
+        return startXMLRPCServer(); // load xmlrpc here
+      }
+	  /* 
 	   if(Transfer2to3||HMM_Iterations==0) {
 	     if( HMM_Iterations>0 )
 	       cout << "WARNING: transfor is not needed, as results are overwritten bei transfer from HMM.\n";
@@ -653,7 +782,7 @@ double StartTraining(int&result)
 	   }
 	   
 	   if( HMM_Iterations>0 )
-	     m3.setHMM(&HMM_);
+	     m3.setHMM(&HMM);
 	   if(Model3_Iterations > 0 || Model4_Iterations > 0 || Model5_Iterations || Model6_Iterations
 	      )
 	     {
@@ -663,7 +792,7 @@ double StartTraining(int&result)
 	   if (FEWDUMPS||!NODUMPS)
 	     {
 	   //    printAllTables(eTrainVcbList,eTestVcbList,fTrainVcbList,fTestVcbList,m1 );
-	     }
+	     }*/
 	 }
      }
    result=minIter;
@@ -685,6 +814,7 @@ int main(int argc, char* argv[])
 /****************/
   getGlobalParSet().insert(new Parameter<string>("oldTrPrbs",ParameterChangedFlag,"old M1 params file name",t_Filename,-1));
   getGlobalParSet().insert(new Parameter<string>("oldAlPrbs",ParameterChangedFlag,"old HMM alignment probs file name",a_Filename,-1));
+  getGlobalParSet().insert(new Parameter<string>("server-log",ParameterChangedFlag,"log file for server",server_log,-1));
 /****************/
   getGlobalParSet().insert(new Parameter<string>("TC",ParameterChangedFlag,"test corpus file name",TestCorpusFilename,PARLEV_INPUT));
   getGlobalParSet().insert(new Parameter<string>("TEST CORPUS FILE",ParameterChangedFlag,"test corpus file name",TestCorpusFilename,-1));
@@ -713,7 +843,7 @@ int main(int argc, char* argv[])
   
   if (Log)
     logmsg.open(LogFilename.c_str(), ios::out);
-  
+
   //printGIZAPars(cout);
   int a=-1;
   double errors=0.0;

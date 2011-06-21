@@ -13,6 +13,9 @@ CFLAGS_NRM = $(CFLAGS) -DWORDINDEX_WITH_4_BYTE
 CFLAGS_VDBG = $(CFLAGS) -g -DDEBUG -DWORDINDEX_WITH_4_BYTE -DVDEBUG
 SRC = *.cpp
 TYPE = 
+XMLRPC_C_PATH = /Users/abby/work/xmlrpc-c
+XMLRPC_C_FLAGS = -I$(XMLRPC_C_PATH)/include  
+XMLRPC_C_LIBS = -L$(XMLRPC_C_PATH)/lib -lxmlrpc_server_abyss++ -lxmlrpc_server++ -lxmlrpc_server_abyss -lxmlrpc_server -lxmlrpc_abyss  -lpthread -lxmlrpc++ -lxmlrpc -lxmlrpc_util -lxmlrpc_xmlparse -lxmlrpc_xmltok
 
 ifeq ($(shell uname),Darwin)
 	LDFLAGS =
@@ -39,7 +42,7 @@ DATE = `date +%d-%m-%Y`
 opt: GIZA++ snt2plain.out plain2snt.out snt2cooc.out
 
 GIZA++: $(OBJ_DIR_OPT) $(OBJ_OPT) 
-	$(CXX) $(CFLAGS_OPT) $(OBJ_OPT) $(LDFLAGS) -o GIZA++
+	$(CXX) $(CFLAGS_OPT) $(OBJ_OPT) $(XMLRPC_C_LIBS) $(LDFLAGS) -o GIZA++
 
 prf: GIZA++.prf
 
@@ -94,7 +97,7 @@ $(OBJ_DIR_PRF)%.o: %.cpp
 	$(CXX)  $(CFLAGS_PRF) -c $< -o $@
 
 $(OBJ_DIR_OPT)%.o: %.cpp
-	$(CXX)  $(CFLAGS_OPT)  -c $< -o $@
+	$(CXX)  $(CFLAGS_OPT) $(XMLRPC_C_FLAGS) -c $< -o $@
 
 iinstall: opt prf dbg
 	-mkdir $(INSTALLDIR)/$(ARCH)
