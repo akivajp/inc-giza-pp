@@ -97,15 +97,14 @@ int model1::em_with_tricks(int noIterations, bool seedModel1, Dictionary& dictio
     em_loop(it,perp, sHandler1, seedModel1, dump_files, alignfile.c_str(), dictionary, useDict, trainViterbiPerp); 
     if (testPerp && testHandler) // calculate test perplexity
       em_loop(it,*testPerp, *testHandler, seedModel1, dump_files, test_alignfile.c_str(), dictionary, useDict, *testViterbiPerp, true); 
-    if( errorsAL()<minErrors )
-      {
-	minErrors=errorsAL();
-        minIter=it;
-      }
-    if (dump_files){
-      if( OutputInAachenFormat==1 )
-	tTable.printCountTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),1);
+    if( errorsAL()<minErrors ) {
+      minErrors=errorsAL();
+      minIter=it;
     }
+    /*if (dump_files){
+      if( OutputInAachenFormat==1 )
+        tTable.printCountTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),1);
+    }*/
     if(step_k != 0) tTable.interpolateStepCounts(); // interpolate stepcounts and full counts here
     tTable.normalizeTable(Elist, Flist, &srcHits_);
     cout << modelName << ": ("<<it<<") TRAIN CROSS-ENTROPY " << perp.cross_entropy()
@@ -121,9 +120,7 @@ int model1::em_with_tricks(int noIterations, bool seedModel1, Dictionary& dictio
 	   << " PERPLEXITY " << (*testViterbiPerp).perplexity() 
 	   << '\n';
     if (dump_files){
-      tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),0);
-      //if( OutputInAachenFormat==0 )
-	//tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
+      tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
     }
     it_fn = time(NULL);
     cout << "Model 1 Iteration: " << it<< " took: " << difftime(it_fn, it_st) << " seconds\n";
