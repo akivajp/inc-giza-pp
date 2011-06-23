@@ -99,6 +99,7 @@ public:
       inputFile->close();
       delete inputFile;
     }
+    Buffer.clear();
   }
   const char * inputFilename;   // parallel corpus file name, similar for all 
                             // sentence pair objects

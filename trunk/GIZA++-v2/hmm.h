@@ -53,8 +53,21 @@ using __gnu_cxx::hash_map;
 #include "HMMTables.h"
 #include "ForwardBackward.h"
 
+extern bool run_giza_server;
+
 class hmm : public model2
 {
+public:
+  virtual ~hmm() {
+    /*
+    if(run_giza_server) { 
+      tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
+      ofstream afilestream(afileh.c_str());
+      cerr << "Printing jumps to file = " << afileh << endl;
+      probs.writeJumps2(afilestream);
+      aCountTable.printTable(afile.c_str());
+    }*/
+  }
  private:
   WordClasses ewordclasses;
   WordClasses fwordclasses;

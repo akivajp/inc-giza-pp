@@ -115,8 +115,8 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
       }
     if (testPerp && testHandler)
       em_loop(*testPerp, *testHandler, dump_files, test_alignfile.c_str(), *testViterbiPerp,  true,it==1,it); 
-    if (dump_files&&OutputInAachenFormat==1)
-      tTable.printCountTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),1);
+    //if (dump_files&&OutputInAachenFormat==1)
+      //tTable.printCountTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),1);
     if(step_k != 0) tTable.interpolateStepCounts(); // interpolate stepcounts and full counts here
     tTable.normalizeTable(Elist, Flist, &srcHits_, it != noIterations);
     aCountTable.normalize(aTable); // IGNORE -- updates model2 alignment probs
@@ -133,9 +133,8 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
        cout << modelName << ": ("<<it<<") VITERBI TEST CROSS-ENTROPY " << testViterbiPerp->cross_entropy()
 	    << " PERPLEXITY " << testViterbiPerp->perplexity() 
 	    << '\n';
-    if (dump_files){
-      if( OutputInAachenFormat==0)
-	tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
+    if (dump_files && (!run_giza_server)) { 
+      tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
       ofstream afilestream(afileh.c_str());
       cerr << "Printing jumps to file = " << afileh << endl;
       probs.writeJumps2(afilestream);
