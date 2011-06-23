@@ -27,6 +27,7 @@ USA.
 extern short NoEmptyWord;
 extern int VerboseSentence;
 extern float step_k;
+extern bool run_giza_server;
 
 GLOBAL_PARAMETER2(int,Model1_Dump_Freq,"MODEL 1 DUMP FREQUENCY","t1","dump frequency of Model 1",PARLEV_OUTPUT,0);
 int NumberOfVALIalignments=100;
@@ -119,7 +120,7 @@ int model1::em_with_tricks(int noIterations, bool seedModel1, Dictionary& dictio
       cout << modelName << ": ("<<it<<") VITERBI TEST CROSS-ENTROPY " << (*testViterbiPerp).cross_entropy()
 	   << " PERPLEXITY " << (*testViterbiPerp).perplexity() 
 	   << '\n';
-    if (dump_files){
+    if (dump_files && (!run_giza_server)){
       tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
     }
     it_fn = time(NULL);
