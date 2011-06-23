@@ -78,7 +78,7 @@ GLOBAL_PARAMETER2(unsigned int,MAX_SENTENCE_LENGTH,"ml","MAX SENTENCE LENGTH","m
 
 
 GLOBAL_PARAMETER(short, DeficientDistortionForEmptyWord,"DeficientDistortionForEmptyWord","0: IBM-3/IBM-4 as described in (Brown et al. 1993); 1: distortion model of empty word is deficient; 2: distoriton model of empty word is deficient (differently); setting this parameter also helps to avoid that during IBM-3 and IBM-4 training too many words are aligned with the empty word",PARLEV_MODELS,0);
-short OutputInAachenFormat=0;
+short OutputInAachenFormat=1;
 bool Transfer=TRANSFER;
 bool Transfer2to3=0;
 short NoEmptyWord=0;
