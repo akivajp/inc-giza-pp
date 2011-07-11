@@ -188,6 +188,7 @@ public:
     ifstream fin(alignFileName.c_str());
     while(getline(fin, line)) ssret << line << endl;
     fin.close();
+    delete sentence;
     cerr << "Alignment returned is " << ssret.str() << endl;
     //system("rm -fr " + alignFileName);
    
