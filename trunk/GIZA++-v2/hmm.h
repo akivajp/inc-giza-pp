@@ -59,14 +59,6 @@ class hmm : public model2
 {
 public:
   virtual ~hmm() {
-    /*
-    if(run_giza_server) { 
-      tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
-      ofstream afilestream(afileh.c_str());
-      cerr << "Printing jumps to file = " << afileh << endl;
-      probs.writeJumps2(afilestream);
-      aCountTable.printTable(afile.c_str());
-    }*/
   }
  private:
   WordClasses ewordclasses;
@@ -96,6 +88,18 @@ public:
 	       const char* alignfile, Perplexity&, bool test,bool doInit,int iter);
   HMMNetwork *makeHMMNetwork(const Vector<WordIndex>& es,const Vector<WordIndex>&fs,bool doInit)const;
   friend class model3;
+  void saveParams() {
+    return; // remove this if you want to save params
+    cerr << "Saving params to file..." << endl;
+    string tfile, afileh;
+    tfile = Prefix + ".thmm.latest" ;
+    afileh = Prefix + ".hhmm.latest";
+    cerr << "Printing word translation probs to file = " << afileh << endl;
+    tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
+    ofstream afilestream(afileh.c_str());
+    cerr << "Printing alignment probs to file = " << afileh << endl;
+    probs.writeJumps2(afilestream);
+  }
   //set<WordIndex> hmmsrcHits_;
 };
 
