@@ -89,7 +89,7 @@ public:
   HMMNetwork *makeHMMNetwork(const Vector<WordIndex>& es,const Vector<WordIndex>&fs,bool doInit)const;
   friend class model3;
   void saveParams() {
-    return; // remove this if you want to save params
+    //return; // remove this if you want to save params
     cerr << "Saving params to file..." << endl;
     string tfile, afileh;
     tfile = Prefix + ".thmm.latest" ;
