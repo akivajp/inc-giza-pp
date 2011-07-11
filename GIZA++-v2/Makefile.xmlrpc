@@ -13,7 +13,7 @@ CFLAGS_NRM = $(CFLAGS) -DWORDINDEX_WITH_4_BYTE
 CFLAGS_VDBG = $(CFLAGS) -g -DDEBUG -DWORDINDEX_WITH_4_BYTE -DVDEBUG
 SRC = *.cpp
 TYPE = 
-XMLRPC_C_PATH = /Users/abby/work/xmlrpc-c
+XMLRPC_C_PATH = /home/abby/xmlrpc-c
 XMLRPC_C_FLAGS = -I$(XMLRPC_C_PATH)/include  
 XMLRPC_C_LIBS = -L$(XMLRPC_C_PATH)/lib -lxmlrpc_server_abyss++ -lxmlrpc_server++ -lxmlrpc_server_abyss -lxmlrpc_server -lxmlrpc_abyss  -lpthread -lxmlrpc++ -lxmlrpc -lxmlrpc_util -lxmlrpc_xmlparse -lxmlrpc_xmltok
 
