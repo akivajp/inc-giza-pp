@@ -78,7 +78,7 @@ GLOBAL_PARAMETER2(unsigned int,MAX_SENTENCE_LENGTH,"ml","MAX SENTENCE LENGTH","m
 
 
 GLOBAL_PARAMETER(short, DeficientDistortionForEmptyWord,"DeficientDistortionForEmptyWord","0: IBM-3/IBM-4 as described in (Brown et al. 1993); 1: distortion model of empty word is deficient; 2: distoriton model of empty word is deficient (differently); setting this parameter also helps to avoid that during IBM-3 and IBM-4 training too many words are aligned with the empty word",PARLEV_MODELS,0);
-short OutputInAachenFormat=1;
+short OutputInAachenFormat=0;
 bool Transfer=TRANSFER;
 bool Transfer2to3=0;
 short NoEmptyWord=0;
@@ -108,6 +108,7 @@ vcbList *globeTrainVcbList,*globfTrainVcbList;
 
 class remoteSentenceAlign: public xmlrpc_c::method {
 public:
+  int numNewSents;
   remoteSentenceAlign() {
     // signature and help strings are documentation -- the client
     // can query this information with a system.methodSignature and
@@ -115,6 +116,7 @@ public:
     this->_signature = "i:ii";
     // method's result and two arguments are integers
     this->_help = "This method aligns a sentence pair";
+    numNewSents = 0;
   }
   typedef std::map<std::string, xmlrpc_c::value> params_t;
   void execute(xmlrpc_c::paramList const& paramList,
@@ -186,7 +188,6 @@ public:
     ifstream fin(alignFileName.c_str());
     while(getline(fin, line)) ssret << line << endl;
     fin.close();
-    delete sentence;
     cerr << "Alignment returned is " << ssret.str() << endl;
     //system("rm -fr " + alignFileName);
    
@@ -195,12 +196,14 @@ public:
         text("alignment", xmlrpc_c::value_string(ssret.str()));
     retData.insert(text);
     *retvalP = xmlrpc_c::value_struct(retData);
+    if(numNewSents++ % 1000000 == 0) {
+      HMM_->saveParams();
+    }
   }
 };
 int startXMLRPCServer() {
   cerr << "Starting XMLRPC server...\n";
   int port = rpc_port; 
-  //FEWDUMPS=1;
   xmlrpc_c::registry myRegistry;
   xmlrpc_c::methodPtr const remoteMethodP(new remoteSentenceAlign);
   myRegistry.addMethod("remoteAlign", remoteMethodP);
