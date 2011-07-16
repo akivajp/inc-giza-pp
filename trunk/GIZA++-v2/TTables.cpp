@@ -89,7 +89,8 @@ COUNT tmodel<COUNT, PROB>::interpolateStepCounts() {
     else tc->count = stpItr->second;
   }
   stepCounts_.clear();
-  return ++step_k;
+  return step_k;
+  //return ++step_k;
 }
 template <class COUNT, class PROB>
 void tmodel<COUNT, PROB>::normalizeTable(const vcbList& srcl, const vcbList& trgl, 

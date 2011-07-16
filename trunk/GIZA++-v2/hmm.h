@@ -94,7 +94,7 @@ public:
     string tfile, afileh;
     tfile = Prefix + ".thmm.latest" ;
     afileh = Prefix + ".hhmm.latest";
-    cerr << "Printing word translation probs to file = " << afileh << endl;
+    cerr << "Printing word translation probs to file = " << tfile << endl;
     tTable.printProbTable(tfile.c_str(),Elist.getVocabList(),Flist.getVocabList(),OutputInAachenFormat);
     ofstream afilestream(afileh.c_str());
     cerr << "Printing alignment probs to file = " << afileh << endl;
