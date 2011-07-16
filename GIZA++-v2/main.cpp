@@ -181,25 +181,27 @@ public:
     delete dictionary; 
     string alignFileName;
     HMM_->em_with_tricks(HMM_Iterations, alignFileName);
+    delete sentence;
     cerr << "alignment output to file " << alignFileName << endl;
     // return sentence alignment
-    stringstream ssret; 
+    /*stringstream ssret; 
     string line;
     ifstream fin(alignFileName.c_str());
     while(getline(fin, line)) ssret << line << endl;
     fin.close();
-    delete sentence;
-    cerr << "Alignment returned is " << ssret.str() << endl;
+    cerr << "Alignment returned is " << ssret.str() << endl;*/
     //system("rm -fr " + alignFileName);
-   
+    if(++numNewSents == 1000000) {
+      HMM_->saveParams();
+      numNewSents = 0;
+    }
     map<string, xmlrpc_c::value> retData;
     pair<string, xmlrpc_c::value> 
-        text("alignment", xmlrpc_c::value_string(ssret.str()));
+        text("alignment", xmlrpc_c::value_string(alignFileName));
+    //pair<string, xmlrpc_c::value> 
+      //  text("alignment", xmlrpc_c::value_string(ssret.str()));
     retData.insert(text);
     *retvalP = xmlrpc_c::value_struct(retData);
-    if(numNewSents++ % 1000000 == 0) {
-      HMM_->saveParams();
-    }
   }
 };
 int startXMLRPCServer() {

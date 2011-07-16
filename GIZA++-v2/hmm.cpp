@@ -103,8 +103,8 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
     afileh = Prefix + ".h" + shortModelName + "." + number ;
     alignfile = Prefix + ".A" + shortModelName + "." + number ;
     test_alignfile = Prefix + ".tst.A" + shortModelName + "." + number ;
-    // each iteration gets a new count table
-    counts=HMMTables<int,WordClasses>(GLOBALProbabilityForEmpty,ewordclasses,fwordclasses);
+    // (old) each iteration gets a new count table 
+    //counts=HMMTables<int,WordClasses>(GLOBALProbabilityForEmpty,ewordclasses,fwordclasses);
     aCountTable.clear();
     initAL();
     em_loop(perp, sHandler1,  dump_files , alignfile.c_str(), trainViterbiPerp, false,it==1,it);
@@ -120,7 +120,11 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
     if(step_k != 0) tTable.interpolateStepCounts(); // interpolate stepcounts and full counts here
     tTable.normalizeTable(Elist, Flist, &srcHits_, it != noIterations);
     aCountTable.normalize(aTable); // IGNORE -- updates model2 alignment probs
-    probs=counts;  // assign counts as new probabilities  
+    probs=counts;  // not needed when using online EM since counts aren't cleared 
+    /*Longer note for my memory: 'probs' holds last iterations expected counts since
+     * in batch EM you clear counts between iterations and counts are needed for HMM
+     * network initialization. For online EM the probs only hold the last steps expected
+     * counts so much more minimal effect for small step sizes. */
     cout << modelName << ": ("<<it<<") TRAIN CROSS-ENTROPY " << perp.cross_entropy()
 	 << " PERPLEXITY " << perp.perplexity() << '\n';
      if (testPerp && testHandler)
@@ -138,6 +142,7 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
       ofstream afilestream(afileh.c_str());
       cerr << "Printing jumps to file = " << afileh << endl;
       probs.writeJumps2(afilestream);
+      afilestream.close();
       aCountTable.printTable(afile.c_str());
     }
     it_fn = time(NULL) ;
@@ -157,6 +162,7 @@ void hmm::load_table(const char* aname){
   cerr << "Loading HMM alignments from file.\n";
   ifstream anamefile(aname);
   probs.readJumps(anamefile);
+  counts = probs; // use old aligne
 }
 
 HMMNetwork *hmm::makeHMMNetwork(const Vector<WordIndex>& es,const Vector<WordIndex>&fs,bool doInit)const
@@ -395,6 +401,8 @@ void hmm::em_loop(Perplexity& perp, sentenceHandler& sHandler1,
     addAL(viterbi_alignment,sent.getSentenceNo(),l);    
     pair_no++;
   } /* of while */
+  if(of2.is_open()) 
+    of2.close();
   sHandler1.rewind();
   perp.record("HMM");
   viterbi_perp.record("HMM");

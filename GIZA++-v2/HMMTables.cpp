@@ -75,7 +75,6 @@ void HMMTables<CLS,MAPPERCLASSTOSTRING>::readJumps(istream& inf)
   string line, sep;
   int sentLength(0), jump(0);  
   PROB prob;
-  int nEntry=0;
   typename map<AlDeps<CLS>,FlexArray<double> >::iterator p;
   while(getline(inf, line)) {
     istringstream ss(line);
@@ -89,9 +88,8 @@ void HMMTables<CLS,MAPPERCLASSTOSTRING>::readJumps(istream& inf)
       //cerr << jump << " : " << prob << endl;
       p->second[jump] = prob;
     }
-    nEntry++;
   }
-  cerr << "Read " << nEntry << " entries in jump. table.\n";
+  cerr << "Read " << alProb.size() << " entries in jump table.\n";
 }
 template<class CLS,class MAPPERCLASSTOSTRING>
 double HMMTables<CLS,MAPPERCLASSTOSTRING>::getAlProb(int istrich,int k,int sentLength,int J,CLS w1,CLS w2,int j,int iter) const
