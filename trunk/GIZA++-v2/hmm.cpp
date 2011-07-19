@@ -103,8 +103,9 @@ int hmm::em_with_tricks(int noIterations, string& alignFile)
     afileh = Prefix + ".h" + shortModelName + "." + number ;
     alignfile = Prefix + ".A" + shortModelName + "." + number ;
     test_alignfile = Prefix + ".tst.A" + shortModelName + "." + number ;
-    // (old) each iteration gets a new count table 
-    //counts=HMMTables<int,WordClasses>(GLOBALProbabilityForEmpty,ewordclasses,fwordclasses);
+    // batch EM: each iteration gets a new count table 
+    if(step_k == 0)
+      counts=HMMTables<int,WordClasses>(GLOBALProbabilityForEmpty,ewordclasses,fwordclasses);
     aCountTable.clear();
     initAL();
     em_loop(perp, sHandler1,  dump_files , alignfile.c_str(), trainViterbiPerp, false,it==1,it);
