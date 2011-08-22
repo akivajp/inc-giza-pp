@@ -57,6 +57,7 @@ using __gnu_cxx::hash_map;
 
 #include "Globals.h"
 
+extern bool skip_unfound; 
 
 /* The tables defined in the following classes are defined as hash tables. For
    example. the t-table is a hash function of a word pair; an alignment is 
@@ -190,8 +191,22 @@ class tmodel{
 public:
   map<wordPairIds, COUNT> stepCounts_;
   COUNT interpolateStepCounts();
-  void insert(WordIndex e, WordIndex f, COUNT cval=0.0, PROB pval = 0.0){
-    *find(e,f)=CPPair(cval,pval);
+  // added parameter skip_unfound 22/8/2011 ADL
+  // NOTE: messes up distribution since now probabilities in cooc table are unnormalized 
+  bool insert(WordIndex e, WordIndex f, COUNT cval=0.0, PROB pval = 0.0){
+    //*find(e,f)=CPPair(cval,pval);
+    CPPair* cp_pair = find(e,f);
+    if(cp_pair == 0) { 
+      cerr << "DID NOT FIND ENTRY : " << e << " " << f << "\n";
+      if(skip_unfound)
+        return false;
+      else
+        abort();
+    }
+    else {
+      *cp_pair = CPPair(cval, pval);
+    }
+    return true;
   }
   CPPair*getPtr(int e,int f){return find(e,f);}
   void checkAndAdd(WordIndex e, vector<WordIndex>& f, bool sort) {
