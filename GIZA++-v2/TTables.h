@@ -160,34 +160,38 @@ class tmodel{
       if(p)
 	*p=CPPair(0,0);
     };
-  CPPair*find(int e,int f)
-    {
-      pair<unsigned int,CPPair> *be=&(*lexmat[e])[0];
-      pair<unsigned int,CPPair> *en=&(*lexmat[e])[0]+(*lexmat[e]).size();
-      pair<unsigned int,CPPair> *x= mbinary_search(be,en,f);
-      if( x==0 )
-	{
-	  cerr << "A:DID NOT FIND ENTRY: " << e << " " << f << '\n';
-	  //abort();
-	  return 0;
-	}
-      return &(x->second);
+  CPPair*find(int e,int f) {
+    if(lexmat[e] == 0) {
+      cerr << "A:DID NOT FIND ENTRY: " << e << " " << f << '\n';
+      return 0;
     }
-  const CPPair*find(int e,int f)const
-    {
-      const pair<unsigned int,CPPair> *be=&(*lexmat[e])[0];
-      const pair<unsigned int,CPPair> *en=&(*lexmat[e])[0]+(*lexmat[e]).size();
-      //const pair<unsigned int,CPPair> *be=&(fs[0])+es[e];
-      //const pair<unsigned int,CPPair> *en=&(fs[0])+es[e+1];
-      const pair<unsigned int,CPPair> *x= mbinary_search(be,en,f);
-      if( x==0 )
-	{
-	  cerr << "B:DID NOT FIND ENTRY: " << e << " " << f << '\n';
-	  //abort();
-	  return 0;
-	}
-      return &(x->second);
+    pair<unsigned int,CPPair> *be=&(*lexmat[e])[0];
+    pair<unsigned int,CPPair> *en=&(*lexmat[e])[0]+(*lexmat[e]).size();
+    pair<unsigned int,CPPair> *x= mbinary_search(be,en,f);
+    if( x==0 ) {
+      cerr << "A:DID NOT FIND ENTRY: " << e << " " << f << '\n';
+      //abort();
+      return 0;
     }
+    return &(x->second);
+  }
+  const CPPair*find(int e,int f) const {
+    if(lexmat[e] == 0) {
+      cerr << "B:DID NOT FIND ENTRY: " << e << " " << f << '\n';
+      return 0;
+    }
+    const pair<unsigned int,CPPair> *be=&(*lexmat[e])[0];
+    const pair<unsigned int,CPPair> *en=&(*lexmat[e])[0]+(*lexmat[e]).size();
+    //const pair<unsigned int,CPPair> *be=&(fs[0])+es[e];
+    //const pair<unsigned int,CPPair> *en=&(fs[0])+es[e+1];
+    const pair<unsigned int,CPPair> *x= mbinary_search(be,en,f);
+    if(x==0) {
+      cerr << "B:DID NOT FIND ENTRY: " << e << " " << f << '\n';
+      //abort();
+      return 0;
+    }
+    return &(x->second);
+  }
 public:
   map<wordPairIds, COUNT> stepCounts_;
   COUNT interpolateStepCounts();
@@ -197,7 +201,6 @@ public:
     //*find(e,f)=CPPair(cval,pval);
     CPPair* cp_pair = find(e,f);
     if(cp_pair == 0) { 
-      cerr << "DID NOT FIND ENTRY : " << e << " " << f << "\n";
       if(skip_unfound)
         return false;
       else

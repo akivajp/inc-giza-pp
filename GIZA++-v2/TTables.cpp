@@ -152,8 +152,7 @@ void tmodel<COUNT, PROB>::readProbTable(const char *filename){
   int nEntry=0;
   while(inf >> src_id  >> trg_id >> count >> prob){
     bool in = insert(src_id, trg_id, count, prob);
-    if(in) 
-      nEntry++;
+    if(in) nEntry++;
   }
   cerr << "Read " << nEntry << " entries in prob. table.\n";
 }

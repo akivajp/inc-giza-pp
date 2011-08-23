@@ -60,7 +60,7 @@ GLOBAL_PARAMETER(float, step_k, "step_k","Number of ONLINE UPDATES made so far",
 GLOBAL_PARAMETER(float, step_alpha, "step_alpha","stepsize",PARLEV_OPTHEUR,.9);
 GLOBAL_PARAMETER(short,rpc_port, "rpc_port", "port to run the XMLRPC server on", PARLEV_OPTHEUR,8090);
 GLOBAL_PARAMETER(bool,run_giza_server,"run_giza_server","1: run GIZA as XMLRPC server",PARLEV_OUTPUT,0);
-GLOBAL_PARAMETER(bool, skip_unfound, "skip_unfound","Flag to skip missing cooc entries",PARLEV_OPTHEUR,true);
+GLOBAL_PARAMETER(bool, skip_unfound, "skip_unfound","Flag to skip missing cooc entries",PARLEV_OPTHEUR,1);
 /****************/
 GLOBAL_PARAMETER(float, PROB_SMOOTH,"probSmooth","probability smoothing (floor) value ",PARLEV_OPTHEUR,1e-7);
 GLOBAL_PARAMETER(float, MINCOUNTINCREASE,"minCountIncrease","minimal count increase",PARLEV_OPTHEUR,1e-7);
