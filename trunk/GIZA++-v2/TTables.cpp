@@ -149,12 +149,13 @@ void tmodel<COUNT, PROB>::readProbTable(const char *filename){
   WordIndex src_id, trg_id;
   PROB prob;
   COUNT count;
-  int nEntry=0;
+  int nEntry=0, missEntry;
   while(inf >> src_id  >> trg_id >> count >> prob){
     bool in = insert(src_id, trg_id, count, prob);
-    if(in) nEntry++;
+    if(in) ++nEntry;
+    else ++missEntry;
   }
-  cerr << "Read " << nEntry << " entries in prob. table.\n";
+  cerr << "Read " << nEntry << " entries into prob. table. " << missEntry << " not found.\n";
 }
 
 template class tmodel<COUNT,PROB> ; 
