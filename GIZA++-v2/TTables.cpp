@@ -63,7 +63,7 @@ void tmodel<COUNT, PROB>::printProbTable(const char *filename,
 	  {
 	    const CPPair&x=(*lexmat[i])[j].second; // x = CPPair
 	    WordIndex e=i,f=(*lexmat[i])[j].first; //e=sourceID, f=targetID
-	    if( x.prob>PROB_SMOOTH )
+	    //if( x.prob>PROB_SMOOTH )
 	      if( actual )
 		of << evlist[e].word << ' ' << fvlist[f].word << ' ' << x.count << ' ' << x.prob << '\n';
 	      else
