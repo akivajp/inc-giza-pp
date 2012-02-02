@@ -41,7 +41,7 @@ GLOBAL_PARAMETER(short,CompareAlDeps,"emAlignmentDependencies",
 		 "lextrain: dependencies in the HMM alignment model. "
 		 " &1: sentence length; &2: previous class; &4: previous position; "
 		 " &8: French position; &16: French class"
-		 ,PARLEV_MODELS,2);
+		 ,PARLEV_MODELS,1);
 GLOBAL_PARAMETER(double,GLOBALProbabilityForEmpty,"emProbForEmpty",
 		 "f-b-trn: probability for empty word",PARLEV_MODELS,0.4);
 GLOBAL_PARAMETER(short,SmoothHMM,"emSmoothHMM",
